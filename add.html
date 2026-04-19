@@ -2,32 +2,45 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Plant</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <div class="main-card">
-        <h2>New Growth</h2>
-        <p style="margin-bottom: 30px;">Give your plant a name and personality.</p>
-
+<body class= "add-plant-theme" onload="updateForm()"> <div class="main-card">
+        <h2>Add New Plant</h2>
         <form onsubmit="addPlant(event)">
-            <div class="form-group">
-                <label>NICKNAME</label>
-                <input type="text" id="pName" placeholder="e.g. Sunny" required>
+            <input type="text" id="pName" placeholder="Plant Nickname" required>
+            
+            <select id="pSpecies" onchange="updateForm()">
+                <option value="Rose">Rose</option>
+                <option value="Mango">Mango</option>
+                <option value="Neem">Neem</option>
+                <option value="Jackfruit">Jackfruit</option>
+                <option value="Coconut">Coconut</option>
+                <option value="Hibiscus">Hibiscus</option>
+                <option value="Snake Plant">Snake Plant</option>
+                <option value="Aloe Vera">Aloe Vera</option>
+                <option value="Monstera">Monstera</option>
+                <option value="Sunflower">Sunflower</option>
+                <option value="Cactus">Cactus</option>
+                <option value="Tulsi">Tulsi</option>
+                <option value="Manual">Manual</option>
+            </select>
+
+            <div id="manualFields" style="display:none;">
+                <input type="text" id="mSpecies" placeholder="Enter Species Name">
+                <input type="text" id="mVariety" placeholder="Enter Variety Name">
             </div>
 
-            <div class="form-group">
-                <label>SPECIES</label>
-                <select id="pSpecies">
-                    <option>Monstera 🍀</option>
-                    <option>Cactus 🌵</option>
-                    <option>Snake Plant 🐍</option>
-                </select>
-            </div>
-
-            <button type="submit" class="btn-grow">Start Growing</button>
+            <select id="pVariety"></select>
+            
+            <input type="text" id="pQuality" placeholder="Quality" readonly>
+            <input type="text" id="pBenefit" placeholder="Benefit" readonly>
+        
+            <button type="submit">Add to Jungle</button>
         </form>
+        <a href="index.html"><button>Back</button></a>
     </div>
+
     <script src="app.js"></script>
 </body>
 </html>
