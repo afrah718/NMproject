@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Farm Products</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<nav class="navbar">
+  <h2>🌾 Green Farm</h2>
+  <div>
+    <a href="index.html">Home</a>
+    <a href="products.html">Products</a>
+    <a href="contact.html">Contact</a>
+  </div>
+</nav>
+
+<h1>🌿 Our Products</h1>
+
+<h2>🥕 Vegetables</h2>
+<div id="veg" class="scroll-container"></div>
+
+<h2>🍎 Fruits</h2>
+<div id="fruit" class="scroll-container"></div>
+
+<h2>🌸 Flowers</h2>
+<div id="flower" class="scroll-container"></div>
+
+<h2>🐄 Daily Products</h2>
+<div id="dairy" class="scroll-container"></div>
+
+<script>
+
+function loadProducts() {
+
+  let plants = JSON.parse(localStorage.getItem("plants")) || [];
+  let dairyProducts = JSON.parse(localStorage.getItem("dairy")) || [];
+
+  let veg = document.getElementById("veg");
+  let fruit = document.getElementById("fruit");
+  let flower = document.getElementById("flower");
+  let dairy = document.getElementById("dairy");
+
+  veg.innerHTML = fruit.innerHTML = flower.innerHTML = dairy.innerHTML = "";
+
+  /* 🌱 PLANTS */
+  plants.forEach(p => {
+
+    if (!p.active) return;
+
+   let html = `
+<div class="product">
+<h3>${p.name}</h3>
+<p>₹${p.price} / ${p.sellQty} kg</p>
+<button onclick="orderProduct('${p.name}','plant')">
+Order Now
+</button>
+</div>
+`;
+    if (p.type === "Vegetable") veg.innerHTML += html;
+    else if (p.type === "Fruit") fruit.innerHTML += html;
+    else if (p.type === "Flower") flower.innerHTML += html;
+  });
+
+  /* 🐄 DAIRY */
+  dairyProducts.forEach(p => {
+
+if (!p.active) return;
+
+let html = `
+<div class="product">
+  <h3>${p.name}</h3>
+  <p>₹${p.price} / ${p.qty} ${p.unit}</p>
+  <button onclick="orderProduct('${p.name}','dairy')">
+    Order Now
+  </button>
+</div>
+`;
+
+dairy.innerHTML += html;
+
+});
+}
+
+loadProducts();
+
+
+function orderProduct(productName, type) {
+
+  let enteredPhone = prompt("Enter your Phone Number");
+  if (!enteredPhone) {
+    alert("❌ Phone number required");
+    return;
+  }
+
+  let user = JSON.parse(localStorage.getItem("currentUser"));
+
+  if (!user || user.phone !== enteredPhone) {
+    alert("❌ Please login first");
+    window.location.href = "client.html";
+    return;
+  }
+
+  let qty = prompt("Enter Quantity");
+  if (!qty || isNaN(qty)) {
+    alert("❌ Invalid quantity");
+    return;
+  }
+
+  qty = Number(qty);
+
+  let plants = JSON.parse(localStorage.getItem("plants")) || [];
+  let dairy = JSON.parse(localStorage.getItem("dairy")) || [];
+  let orders = JSON.parse(localStorage.getItem("orders")) || [];
+
+  let baseQty, basePrice;
+
+  /* 🌱 PLANT */
+  if(type === "plant"){
+
+    let p = plants.find(x => x.name === productName);
+
+    let sold = 0;
+    orders.forEach(o=>{
+      if(o.product === p.name){
+        sold += Number(o.quantity);
+      }
+    });
+
+    let available = (p.totalQty || p.qty) - sold;
+
+   if(qty > available || available <= 0){
+  alert("❌ Stock not available");
+  return;
+}
+    baseQty = p.sellQty || p.totalQty;
+    basePrice = p.price;
+
+    p.totalQty = available - qty;
+  }
+
+  /* 🐄 DAIRY */
+  else {
+
+    let d = dairy.find(x => x.name === productName);
+
+    let sold = 0;
+    orders.forEach(o=>{
+      if(o.product === d.name){
+        sold += Number(o.quantity);
+      }
+    });
+
+    let available = (d.totalQty || d.qty) - sold;
+
+   if(qty > available || available <= 0){
+  alert("❌ Stock not available");
+  return;
+}
+    baseQty = d.totalQty;
+    basePrice = d.price;
+
+    d.totalQty = available - qty;
+  }
+
+  /* 📍 DELIVERY */
+  let userPlace = prompt("Enter your area:");
+  let distance = Math.random() * 20;
+
+  let deliveryMinutes = distance <= 3 ? 30 : distance <= 10 ? 60 : 120;
+
+  let now = new Date();
+  let deliveryTime = new Date(now.getTime() + deliveryMinutes * 60000);
+
+  /* 💰 PRICE */
+ let pricePerUnit = baseQty ? (basePrice / baseQty) : 0;
+  let totalPrice = Math.round(qty * pricePerUnit);
+
+  /* 🧾 ORDER SAVE */
+  let orderId = "ORD" + Date.now();
+
+  orders.push({
+  
+    id: orderId,
+    phone: user.phone,
+    name: user.name,
+    product: productName,
+    price: totalPrice,
+    quantity: qty,
+    status: "Pending",
+    location: userPlace,
+    distance: distance.toFixed(2),
+    time: now.toISOString(),
+    deliveryTime: deliveryTime.toISOString(),
+    rated: false
+   
+  });
+
+  localStorage.setItem("orders", JSON.stringify(orders));
+  localStorage.setItem("plants", JSON.stringify(plants));
+  localStorage.setItem("dairy", JSON.stringify(dairy));
+
+  alert(`✅ Order placed!
+Quantity: ${qty}
+Total Price: ₹${totalPrice}
+Delivery: ${deliveryMinutes} mins`);
+
+  loadProducts();
+}
+function checkDeliveredRedirect(){
+
+let user = JSON.parse(localStorage.getItem("currentUser"));
+if(!user) return;
+
+let orders = JSON.parse(localStorage.getItem("orders")) || [];
+
+// check delivered but not rated
+let needRating = orders.find(o =>
+  o.phone === user.phone &&
+  o.status === "Delivered" &&
+  !o.rated
+);
+
+if(needRating){
+  localStorage.setItem("ratingOrder", JSON.stringify(needRating));
+  window.location.href = "contact.html"; // ✅ redirect here
+}
+
+}
+
+// run on page load
+checkDeliveredRedirect();
+</script>
+
+<button class="back-btn" onclick="goBack()">⬅ Back</button>
+
+<script>
+function goBack() {
+  window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>

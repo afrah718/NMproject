@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Client System</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, button { margin: 5px; padding: 8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background: #4CAF50; color: white; }
+  </style>
+</head>
+
+<body>
+
+<h1>👤 Client System</h1>
+
+<hr>
+
+<!-- ================= REGISTER ================= -->
+<h2>📝 Register</h2>
+
+<input id="rname" placeholder="Name">
+<input id="rphone" placeholder="Phone (10 digit)">
+<input id="remail" placeholder="Email (@gmail.com)">
+<input id="raddress" placeholder="Address">
+<input id="rdistrict" placeholder="District">
+<input id="rpincode" placeholder="Pincode (6 digit)">
+
+<button onclick="register()">Register</button>
+
+<hr>
+
+<!-- ================= LOGIN ================= -->
+<h2>🔐 Login</h2>
+
+<input id="lphone" placeholder="Phone (10 digit)">
+<button onclick="login()">Login</button>
+
+<hr>
+
+<!-- ================= ORDERS ================= -->
+<h2>📦 My Orders</h2>
+<button onclick="loadMyOrders()">Load My Orders</button>
+
+<table id="orderTable">
+  <tr>
+    <th>Product</th>
+    <th>Qty</th>
+    <th>Order Time</th>
+    <th>Delivery Time</th>
+    <th>Status</th>
+  </tr>
+</table>
+
+<script>
+
+/* ================= REGISTER ================= */
+function register() {
+
+  let name = rname.value;
+  let phone = rphone.value;
+  let email = remail.value;
+  let address = raddress.value;
+  let district = rdistrict.value;
+  let pincode = rpincode.value;
+
+  if (!name) return alert("Name required");
+
+  if (!/^[0-9]{10}$/.test(phone))
+    return alert("Phone must be 10 digits");
+
+  if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email))
+    return alert("Only @gmail.com allowed");
+
+  if (!/^[0-9]{6}$/.test(pincode))
+    return alert("Pincode must be 6 digits");
+
+  let users = JSON.parse(localStorage.getItem("users")) || [];
+
+  if (users.find(u => u.phone === phone)) {
+    alert("Already registered");
+    return;
+  }
+
+  users.push({
+    name, phone, email, address, district, pincode
+  });
+
+  localStorage.setItem("users", JSON.stringify(users));
+
+  alert("✅ Registered successfully");
+}
+
+/* ================= LOGIN ================= */
+function login() {
+
+  let phone = lphone.value;
+
+  if (!/^[0-9]{10}$/.test(phone)) {
+    alert("Invalid phone");
+    return;
+  }
+
+  let users = JSON.parse(localStorage.getItem("users")) || [];
+
+  let user = users.find(u => u.phone === phone);
+
+  if (!user) {
+    alert("Not registered");
+    return;
+  }
+
+  localStorage.setItem("currentUser", JSON.stringify(user));
+
+  alert("Login success");
+}
+
+/* ================= LOAD ORDERS ================= */
+function loadMyOrders() {
+
+  let user = JSON.parse(localStorage.getItem("currentUser"));
+  let orders = JSON.parse(localStorage.getItem("orders")) || [];
+
+  let table = document.getElementById("orderTable");
+  table.innerHTML = "";
+
+  orders.forEach(o => {
+
+    if (o.phone !== user.phone) return;
+
+    let orderTime = o.time ? new Date(o.time).toLocaleString() : "-";
+    let deliveryTime = o.deliveryTime ? new Date(o.deliveryTime).toLocaleString() : "-";
+
+    let qty = o.quantity ? o.quantity + " kg" : "-";
+
+    let statusText = "";
+
+    if (o.status === "Delivered") {
+      statusText = "🟢 Delivered";
+    } else {
+      let remaining = getRemainingTime(o.deliveryTime);
+      statusText = `🟡 ${remaining} mins left`;
+    }
+
+    table.innerHTML += `
+      <tr>
+        <td>${o.product}</td>
+        <td>${qty}</td>
+        <td>${orderTime}</td>
+        <td>${deliveryTime}</td>
+        <td>${statusText}</td>
+      </tr>
+    `;
+  });
+}
+function getRemainingTime(deliveryTime) {
+
+  if (!deliveryTime) return "Calculating...";
+
+  let now = new Date().getTime();
+  let delivery = new Date(deliveryTime).getTime();
+
+  let diff = Math.floor((delivery - now) / 60000);
+
+  if (diff <= 0) return "Arriving now";
+
+  return diff;
+}
+function checkDeliveredRedirect(){
+
+let user = JSON.parse(localStorage.getItem("currentUser"));
+if(!user) return;
+
+let orders = JSON.parse(localStorage.getItem("orders")) || [];
+
+// check delivered but not rated
+let needRating = orders.find(o =>
+  o.phone === user.phone &&
+  o.status === "Delivered" &&
+  !o.rated
+);
+
+if(needRating){
+  localStorage.setItem("ratingOrder", JSON.stringify(needRating));
+  window.location.href = "contact.html"; // ✅ redirect here
+}
+
+}
+
+// run on page load
+checkDeliveredRedirect();
+</script>
+<button class="back-btn" onclick="goBack()">⬅ Back</button>
+<script>
+  function goBack() {
+  window.location.href = "index.html";
+}
+</script>
+</body>
+</html>

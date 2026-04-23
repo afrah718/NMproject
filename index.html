@@ -1,16 +1,65 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="style.css">
-  </head>
-  <body class="garden-theme">
-    <div class="main-card">
-      <h1><strong> My Garden </strong> </h1>
-      <a href="add.html"><button>Add New Plant</button></a>
-      <a href="jungle.html"><button>View Garden</button></a>
+<head>
+  <title>Green Farm</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<nav class="navbar">
+  <h2>🌾 Green Farm</h2>
+  <div>
+    <a href="admin.html">Admin</a>
+    <a href="index.html">Home</a>
+    <a href="products.html">Products</a>
+    <a href="services.html">Services</a>
+    <a href="contact.html">Contact</a>
+    <a href="client.html">Dashboard</a>
     
-    </div>
-    
-  </body>
+  </div>
+</nav>
+
+<section class="hero">
+  <div>
+    <h1>Fresh & Organic Farm Products</h1>
+    <p>Directly from farm to your home 🌱</p>
+    <a href="products.html">
+      <button class="btn">Shop Now</button>
+    </a>
+  </div>
+
+  <img src="https://cdn-icons-png.flaticon.com/512/2909/2909769.png">
+</section>
+
+<section class="features">
+  <div class="card">🌿 Organic Farming</div>
+  <div class="card">🚚 Fast Delivery</div>
+  <div class="card">💯 Fresh Products</div>
+</section>
+
+</body>
+<script>function checkDeliveredRedirect(){
+
+let user = JSON.parse(localStorage.getItem("currentUser"));
+if(!user) return;
+
+let orders = JSON.parse(localStorage.getItem("orders")) || [];
+
+// check delivered but not rated
+let needRating = orders.find(o =>
+  o.phone === user.phone &&
+  o.status === "Delivered" &&
+  !o.rated
+);
+
+if(needRating){
+  localStorage.setItem("ratingOrder", JSON.stringify(needRating));
+  window.location.href = "contact.html"; // ✅ redirect here
+}
+
+}
+
+// run on page load
+checkDeliveredRedirect();</script>
 </html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Farm Admin</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<script>
+function checkPassword(){
+  let saved = localStorage.getItem("adminPass") || "1234";
+  let pass = prompt("Enter Admin Password");
+
+  if(pass !== saved){
+    alert("❌ Wrong Password");
+    window.location.href = "index.html";
+  }
+}
+checkPassword();
+</script>
+
+<h1>🌾 FARM ADMIN</h1>
+
+<div class="menu">
+<button onclick="show('maint')">Maintenance</button>
+<button onclick="show('price')">Price Distribution</button>
+</div>
+
+<!-- ================= MAINT ================= -->
+<div id="maint" class="box">
+
+<h3>Plants</h3>
+<input id="pname" placeholder="Name">
+<select id="ptype">
+<option>Vegetable</option>
+<option>Fruit</option>
+<option>Flower</option>
+<option>Decorative</option>
+<option>Trees</option>
+</select>
+<input id="pqty" placeholder="Qty">
+<button onclick="addPlant()">Add</button>
+
+<table id="plantTable"></table>
+
+<hr>
+
+<h3>Animals</h3>
+<input id="aname" placeholder="Name">
+<input id="aqty" placeholder="Qty">
+<button onclick="addAnimal()">Add</button>
+
+<table id="animalTable"></table>
+
+</div>
+
+<!-- ================= PRICE ================= -->
+<div id="price" class="box">
+
+<h3>Plant Price Distribution</h3>
+<table id="priceTable"></table>
+
+<hr>
+
+<h3>Daily Products</h3>
+
+<input id="dname" placeholder="Name">
+<select id="dunit">
+<option>kg</option>
+<option>litre</option>
+<option>gram</option>
+<option>ml</option>
+</select>
+<input id="dqty" placeholder="Qty">
+<input id="dprice" placeholder="Price">
+<input id="dmfg" type="date">
+<input id="dexp" type="date">
+
+<button onclick="addDairy()">Add</button>
+
+<table id="dairyTable"></table>
+
+</div>
+
+<script>
+
+function show(id){
+maint.style.display="none";
+price.style.display="none";
+document.getElementById(id).style.display="block";
+}
+show("maint");
+
+/* DATA */
+let plants=JSON.parse(localStorage.getItem("plants"))||[];
+let animals=JSON.parse(localStorage.getItem("animals"))||[];
+let dairy=JSON.parse(localStorage.getItem("dairy"))||[];
+
+/* ================= PLANTS ================= */
+function addPlant(){
+let name = pname.value;
+let type = ptype.value;
+let qty = Number(pqty.value);
+
+let ex = plants.find(p=>p.name===name);
+
+if(ex){
+ex.qty += qty;
+}else{
+plants.push({
+name,type,qty,
+lastWater: Date.now(),
+lastFert: Date.now()
+});
+}
+
+localStorage.setItem("plants", JSON.stringify(plants));
+loadPlants();
+loadPrice();
+}
+
+function waterStatus(p){
+let hrs = (Date.now() - p.lastWater) / (1000*60*60);
+if(hrs < 12) return "💧 Good";
+if(hrs < 24) return "🌤 Dry";
+return "🌵 Thirsty";
+}
+
+function fertStatus(p){
+let days = (Date.now() - p.lastFert) / (1000*60*60*24);
+if(days < 7) return "✅ Done";
+if(days < 21) return "⚠ Pending";
+return "❗ Urgent";
+}
+
+function loadPlants(){
+let t = plantTable;
+t.innerHTML = `
+<tr>
+<th>Name</th><th>Type</th><th>Qty</th>
+<th>Water</th><th>Action</th>
+<th>Fertilizer</th><th>Action</th>
+</tr>`;
+
+plants.forEach((p,i)=>{
+let r = t.insertRow();
+r.insertCell(0).innerText = p.name;
+r.insertCell(1).innerText = p.type;
+r.insertCell(2).innerText = p.qty;
+r.insertCell(3).innerText = waterStatus(p);
+r.insertCell(4).innerHTML = `<button onclick="waterPlant(${i})">Water</button>`;
+r.insertCell(5).innerText = fertStatus(p);
+r.insertCell(6).innerHTML = `<button onclick="fert(${i})">Fertilize</button>`;
+});
+}
+
+function waterPlant(i){
+plants[i].lastWater = Date.now();
+localStorage.setItem("plants", JSON.stringify(plants));
+loadPlants();
+}
+
+function fert(i){
+plants[i].lastFert = Date.now();
+localStorage.setItem("plants", JSON.stringify(plants));
+loadPlants();
+}
+
+/* ================= ANIMALS ================= */
+function addAnimal(){
+let name = aname.value;
+let qty = Number(aqty.value);
+
+let ex = animals.find(a=>a.name===name);
+
+if(ex){ ex.qty += qty; }
+else{
+animals.push({name,qty,lastFed: Date.now()});
+}
+
+localStorage.setItem("animals", JSON.stringify(animals));
+loadAnimals();
+}
+
+function feedStatus(a){
+let hrs = (Date.now() - a.lastFed) / (1000*60*60);
+if(hrs < 3) return "Fed";
+return "Not Fed";
+}
+
+function loadAnimals(){
+let t=animalTable;
+t.innerHTML=`<tr><th>Name</th><th>Qty</th><th>Status</th><th>Action</th></tr>`;
+
+animals.forEach((a,i)=>{
+let r=t.insertRow();
+r.insertCell(0).innerText=a.name;
+r.insertCell(1).innerText=a.qty;
+r.insertCell(2).innerText=feedStatus(a);
+r.insertCell(3).innerHTML=`<button onclick="feed(${i})">Feed</button>`;
+});
+}
+
+function feed(i){
+animals[i].lastFed=Date.now();
+localStorage.setItem("animals",JSON.stringify(animals));
+loadAnimals();
+}
+
+/* ================= PRICE ================= */
+function loadPrice(){
+
+let t = priceTable;
+
+t.innerHTML = `
+<tr>
+<th>Name</th><th>Total Qty</th>
+<th>Sell Qty</th><th>Price</th>
+<th>Balance</th><th>SET</th>
+</tr>`;
+
+let orders = JSON.parse(localStorage.getItem("orders")) || [];
+
+plants.forEach((p,i)=>{
+
+let sold = 0;
+orders.forEach(o=>{
+if(o.product === p.name){ sold += Number(o.quantity); }
+});
+
+let totalQty = p.totalQty || p.qty;
+let balance = totalQty - sold;
+if (balance < 0) balance = 0;
+
+let r = t.insertRow();
+
+r.insertCell(0).innerText = p.name;
+r.insertCell(1).innerHTML = `<input id="tq${i}" value="${totalQty}">`;
+r.insertCell(2).innerHTML = `<input id="sq${i}" value="${p.sellQty || ""}">`;
+r.insertCell(3).innerHTML = `<input id="pr${i}" value="${p.price || ""}">`;
+r.insertCell(4).innerText = balance;
+r.insertCell(5).innerHTML = `<button onclick="setPrice(${i})">SET</button>`;
+});
+}
+
+function setPrice(i){
+plants[i].totalQty = Number(document.getElementById("tq"+i).value);
+plants[i].sellQty = Number(document.getElementById("sq"+i).value);
+plants[i].price = Number(document.getElementById("pr"+i).value);
+plants[i].active = true;
+
+localStorage.setItem("plants",JSON.stringify(plants));
+loadPrice();
+alert("✅ Saved");
+}
+
+/* ================= DAIRY ================= */
+function addDairy(){
+
+let name = dname.value;
+
+let existing = dairy.find(d => d.name === name);
+
+if(existing){
+  // update மட்டும்
+  existing.qty = Number(dqty.value);        // per sale qty
+  existing.unit = dunit.value;
+  existing.price = Number(dprice.value);
+  existing.totalQty = Number(dtotal.value);
+  existing.mfg = dmfg.value;
+  existing.exp = dexp.value;
+
+}else{
+
+  dairy.push({
+    name: name,
+    qty: Number(dqty.value),          // per sale qty
+    unit: dunit.value,
+    price: Number(dprice.value),
+    totalQty: Number(dtotal.value),   // total stock
+    mfg: dmfg.value,
+    exp: dexp.value,
+    active: false
+  });
+
+}
+
+localStorage.setItem("dairy", JSON.stringify(dairy));
+loadDairy();
+}
+
+function loadDairy(){
+
+let t = dairyTable;
+
+t.innerHTML = `
+<tr>
+<th>Name</th>
+<th>Qty</th>
+<th>Unit</th>
+<th>Price</th>
+<th>Total Qty</th>
+<th>MFG</th>
+<th>EXP</th>
+<th>Balance</th>
+<th>SET</th>
+</tr>`;
+
+let orders = JSON.parse(localStorage.getItem("orders")) || [];
+
+dairy.forEach((d,i)=>{
+
+let sold = 0;
+
+orders.forEach(o=>{
+if(o.product === d.name){
+sold += Number(o.quantity);
+}
+});
+
+let totalQty = Number(d.totalQty) || 0;
+let balance = totalQty - sold;
+
+if(balance < 0) balance = 0;
+
+let r = t.insertRow();
+
+r.insertCell(0).innerText = d.name;
+
+r.insertCell(1).innerHTML =
+`<input value="${d.qty}" onchange="editD(${i},'qty',this.value)">`;
+
+r.insertCell(2).innerHTML =
+`<select onchange="editD(${i},'unit',this.value)">
+<option ${d.unit==='kg'?'selected':''}>kg</option>
+<option ${d.unit==='litre'?'selected':''}>litre</option>
+<option ${d.unit==='ml'?'selected':''}>ml</option>
+<option ${d.unit==='gram'?'selected':''}>gram</option>
+</select>`;
+
+r.insertCell(3).innerHTML =
+`<input value="${d.price}" onchange="editD(${i},'price',this.value)">`;
+
+r.insertCell(4).innerHTML =
+`<input value="${d.totalQty}" onchange="editD(${i},'totalQty',this.value)">`;
+
+r.insertCell(5).innerHTML =
+`<input type="date" value="${d.mfg}" onchange="editD(${i},'mfg',this.value)">`;
+
+r.insertCell(6).innerHTML =
+`<input type="date" value="${d.exp}" onchange="editD(${i},'exp',this.value)">`;
+
+r.insertCell(7).innerText = balance;
+
+r.insertCell(8).innerHTML =
+`<button onclick="setD(${i})">SET</button>`;
+
+});
+}
+function editD(i,key,val){
+if(key === "qty" || key === "price" || key === "totalQty"){
+dairy[i][key] = Number(val);
+}else{
+dairy[i][key] = val;
+}
+
+localStorage.setItem("dairy", JSON.stringify(dairy));
+}
+
+
+function setD(i){
+dairy[i].active = true;
+localStorage.setItem("dairy", JSON.stringify(dairy));
+alert("✅ Dairy Product Activated");
+}
+
+loadPlants();
+loadAnimals();
+loadPrice();
+loadDairy();
+
+</script>
+
+<button class="back-btn" onclick="goBack()">⬅ Back</button>
+<script>
+function goBack(){
+window.location.href="index.html";
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Contact</title>
+  <link rel="stylesheet" href="style.css">
+
+  
+
+</head>
+
+<body>
+
+<nav class="navbar">
+  <h2>🌾 Green Farm</h2>
+  <div>
+    <a href="index.html">Home</a>
+    <a href="products.html">Products</a>
+    <a href="services.html">Services</a>
+    <a href="contact.html">Contact</a>
+  </div>
+</nav>
+
+<h1>📞 Contact Us</h1>
+
+<p>Email: greenfarm@gmail.com</p>
+<p>Phone: 9876543210</p>
+
+<!-- ⭐ RATING -->
+<h2>⭐ Give Rating</h2>
+
+<div class="stars" id="stars">
+  <span onclick="setRating(1)">★</span>
+  <span onclick="setRating(2)">★</span>
+  <span onclick="setRating(3)">★</span>
+  <span onclick="setRating(4)">★</span>
+  <span onclick="setRating(5)">★</span>
+</div>
+
+<!-- 📝 OPTIONAL REVIEW -->
+<textarea id="reviewText" placeholder="Write something (optional)"></textarea><br>
+<button onclick="submitReview()">Submit</button>
+
+<!-- 📋 DISPLAY -->
+<div id="reviewList"></div>
+
+<script>
+let order = JSON.parse(localStorage.getItem("ratingOrder"));
+
+if(order){
+  let title = document.createElement("h3");
+  title.innerText = "Rate for: " + order.product;
+  document.body.insertBefore(title, document.getElementById("stars"));
+}
+let rating = 0;
+
+function setRating(r) {
+  rating = r;
+  let stars = document.querySelectorAll("#stars span");
+
+  stars.forEach((s, i) => {
+    s.classList.toggle("active", i < r);
+  });
+}
+
+function submitReview() {
+
+  if (rating === 0) {
+    alert("Please select rating");
+    return;
+  }
+
+  let text = document.getElementById("reviewText").value;
+
+  let data = JSON.parse(localStorage.getItem("reviews")) || [];
+
+  data.push({
+    rating: rating,
+    text: text
+  });
+
+  localStorage.setItem("reviews", JSON.stringify(data));
+
+  /* ✅ IMPORTANT PART */
+  let order = JSON.parse(localStorage.getItem("ratingOrder"));
+  let orders = JSON.parse(localStorage.getItem("orders")) || [];
+
+  let index = orders.findIndex(o => o.id === order.id);
+
+  if(index !== -1){
+    orders[index].rated = true;  // ✅ update
+  }
+
+  localStorage.setItem("orders", JSON.stringify(orders));
+  localStorage.removeItem("ratingOrder");
+
+  alert("✅ Feedback saved");
+
+  document.getElementById("reviewText").value = "";
+  loadReviews();
+}
+function loadReviews() {
+
+  let data = JSON.parse(localStorage.getItem("reviews")) || [];
+  let box = document.getElementById("reviewList");
+
+  box.innerHTML = "<h3>Customer Reviews</h3>";
+
+  data.forEach(r => {
+    box.innerHTML += `
+      <div class="review">
+        <p>${"★".repeat(r.rating)}</p>
+        <p>${r.text || "No comment"}</p>
+      </div>
+    `;
+  });
+}
+
+loadReviews();
+
+</script>
+<button class="back-btn" onclick="goBack()">⬅ Back</button>
+<script>
+  function goBack() {
+  window.location.href = "index.html";
+}
+</script>
+</body>
+</html>
