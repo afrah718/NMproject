@@ -63,17 +63,18 @@ checkPassword();
 
 <hr>
 
-<h3>Daily Products</h3>
+<h3>Dairy Products</h3>
 
 <input id="dname" placeholder="Name">
 <select id="dunit">
-<option>kg</option>
-<option>litre</option>
-<option>gram</option>
-<option>ml</option>
+  <option>kg</option>
+  <option>litre</option>
 </select>
+
 <input id="dqty" placeholder="Qty">
 <input id="dprice" placeholder="Price">
+<input id="dtotal" placeholder="Total Qty"> <!-- ✅ ADD THIS -->
+
 <input id="dmfg" type="date">
 <input id="dexp" type="date">
 
@@ -258,36 +259,48 @@ alert("✅ Saved");
 /* ================= DAIRY ================= */
 function addDairy(){
 
-let name = dname.value;
+let name = dname.value.trim().toLowerCase();
+let unit = dunit.value;
+let qty = Number(dqty.value);
+let price = Number(dprice.value);
+let totalQty = Number(dtotal.value); // ✅ NEW
+let mfg = dmfg.value;
+let exp = dexp.value;
 
-let existing = dairy.find(d => d.name === name);
+/* validation */
+if(!name || qty <= 0 || price <= 0 || totalQty <= 0){
+  alert("Enter valid data");
+  return;
+}
+
+let existing = dairy.find(d => d.name.toLowerCase() === name);
 
 if(existing){
-  // update மட்டும்
-  existing.qty = Number(dqty.value);        // per sale qty
-  existing.unit = dunit.value;
-  existing.price = Number(dprice.value);
-  existing.totalQty = Number(dtotal.value);
-  existing.mfg = dmfg.value;
-  existing.exp = dexp.value;
-
-}else{
-
+  existing.qty = qty;
+  existing.price = price;
+  existing.totalQty = totalQty;
+  existing.unit = unit;
+  existing.mfg = mfg;
+  existing.exp = exp;
+  existing.active = true;
+}
+else{
   dairy.push({
-    name: name,
-    qty: Number(dqty.value),          // per sale qty
-    unit: dunit.value,
-    price: Number(dprice.value),
-    totalQty: Number(dtotal.value),   // total stock
-    mfg: dmfg.value,
-    exp: dexp.value,
-    active: false
+    name,
+    unit,
+    qty,
+    totalQty,
+    price,
+    mfg,
+    exp,
+    active: true
   });
-
 }
 
 localStorage.setItem("dairy", JSON.stringify(dairy));
 loadDairy();
+
+alert("✅ Added / Updated"); // 👈 confirm
 }
 
 function loadDairy(){
