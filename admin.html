@@ -63,7 +63,6 @@ checkPassword();
 
 <hr>
 
-<<<<<<< HEAD
 <h3>Dairy Products</h3>
 
 <input id="dname" placeholder="Name">
@@ -76,19 +75,6 @@ checkPassword();
 <input id="dprice" placeholder="Price">
 <input id="dtotal" placeholder="Total Qty"> <!-- ✅ ADD THIS -->
 
-=======
-<h3>Daily Products</h3>
-
-<input id="dname" placeholder="Name">
-<select id="dunit">
-<option>kg</option>
-<option>litre</option>
-<option>gram</option>
-<option>ml</option>
-</select>
-<input id="dqty" placeholder="Qty">
-<input id="dprice" placeholder="Price">
->>>>>>> 69f5d23 (added all website files)
 <input id="dmfg" type="date">
 <input id="dexp" type="date">
 
@@ -273,7 +259,6 @@ alert("✅ Saved");
 /* ================= DAIRY ================= */
 function addDairy(){
 
-<<<<<<< HEAD
 let name = dname.value.trim().toLowerCase();
 let unit = dunit.value;
 let qty = Number(dqty.value);
@@ -310,43 +295,12 @@ else{
     exp,
     active: true
   });
-=======
-let name = dname.value;
-
-let existing = dairy.find(d => d.name === name);
-
-if(existing){
-  // update மட்டும்
-  existing.qty = Number(dqty.value);        // per sale qty
-  existing.unit = dunit.value;
-  existing.price = Number(dprice.value);
-  existing.totalQty = Number(dtotal.value);
-  existing.mfg = dmfg.value;
-  existing.exp = dexp.value;
-
-}else{
-
-  dairy.push({
-    name: name,
-    qty: Number(dqty.value),          // per sale qty
-    unit: dunit.value,
-    price: Number(dprice.value),
-    totalQty: Number(dtotal.value),   // total stock
-    mfg: dmfg.value,
-    exp: dexp.value,
-    active: false
-  });
-
->>>>>>> 69f5d23 (added all website files)
 }
 
 localStorage.setItem("dairy", JSON.stringify(dairy));
 loadDairy();
-<<<<<<< HEAD
 
 alert("✅ Added / Updated"); // 👈 confirm
-=======
->>>>>>> 69f5d23 (added all website files)
 }
 
 function loadDairy(){
